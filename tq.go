@@ -12,10 +12,19 @@ const key = "f80464c47d16849da62561a10151d1b7"
 
 func main() {
 	argNum := len(os.Args)
-	checkDir()
-	fil, err := os.OpenFile("./data/city.dat", os.O_CREATE|os.O_RDONLY, 0777)
+	//dirwd,_:=os.Getwd()
+	home, err := Home()
+	if err != nil {
+		fmt.Println("目录寻找失败")
+		return
+	}
+	checkDir(home)
+	dir := home + "/AppData/Local/tq/data/city.dat"
+	fmt.Println(dir)
+	fil, err := os.OpenFile(dir, os.O_CREATE|os.O_RDONLY, 0777)
 	if err != nil {
 		fmt.Println(err.Error())
+		return
 	}
 	buf, err := ioutil.ReadAll(fil)
 	_ = fil.Close()
@@ -68,7 +77,10 @@ func main() {
 				return
 			}
 			if ok {
-				fil, _ := os.OpenFile("./data/city.dat", os.O_TRUNC|os.O_RDWR, 0777)
+				fil, _ := os.OpenFile(home+"/AppData/Local/tq/data/city.dat", os.O_TRUNC|os.O_RDWR, 0777)
+				defer func() {
+					_ = fil.Close()
+				}()
 				cityNum := len(adcode)
 				if cityNum == 1 {
 					for code := range adcode {
@@ -108,11 +120,12 @@ func main() {
 	}
 }
 
-func checkDir() {
-	dir := "./data"
+func checkDir(home string) {
+	dir := home + "/AppData/Local/tq/data"
+	//fmt.Println(dir)
 	_, err := os.Stat(dir)
 	if os.IsNotExist(err) {
-		_ = os.Mkdir(dir, os.ModePerm)
+		_ = os.MkdirAll(dir, os.ModePerm)
 	}
 }
 
