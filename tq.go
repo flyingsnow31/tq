@@ -71,13 +71,13 @@ func main() {
 				fil, _ := os.OpenFile("./data/city.dat", os.O_TRUNC|os.O_RDWR, 0777)
 				cityNum := len(adcode)
 				if cityNum == 1 {
-					for code, _ := range adcode {
+					for code := range adcode {
 						_, _ = fil.WriteString(code)
 					}
 					return
 				} else {
 					fmt.Println("出现重名，请选择:")
-					var tmp []string
+					tmp := make([]string, cityNum)
 					index := 0
 					for code, name := range adcode {
 						tmp = append(tmp, code)
