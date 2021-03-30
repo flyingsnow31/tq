@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"strings"
 )
 
 const key = "f80464c47d16849da62561a10151d1b7"
@@ -27,31 +26,32 @@ func main() {
 				fmt.Println("please use 'tq set <cityname>' to init.")
 				return
 			}
-			InQuire(string(buf))
+			msg, ok := getWeatherNow(string(buf))
+			if !ok {
+				fmt.Println(msg)
+				return
+			}
 		}
 	case 2:
 		{
 			date := os.Args[1]
-			find := strings.Count(date, ".")
-			if find == 1 {
-				if len(string(buf)) == 0 {
-					fmt.Println("please use 'tq set <cityname>' to init.")
-					return
-				}
-				forecastDay(string(buf), date)
-			} else if find > 1 {
-				if len(string(buf)) == 0 {
-					fmt.Println("please use 'tq set <cityname>' to init.")
-					return
-				}
-				fmt.Println("para error, use 'tq h'")
+			if date == "h" { //帮助信息
+				printHelp()
 				return
-			} else {
-				if date == "h" {
-					printHelp()
+			} else if date == "a" { //未来第1、2、3天的天气
+				if len(string(buf)) == 0 {
+					fmt.Println("please use 'tq set <cityname>' to init.")
 					return
-				} else {
-					forecastNum(string(buf), date)
+				}
+				msg, ok := getWeatherFea(string(buf))
+				if !ok {
+					fmt.Println(msg)
+					return
+				}
+			} else { //未来三天
+				if len(string(buf)) == 0 {
+					fmt.Println("please use 'tq set <cityname>' to init.")
+					return
 				}
 			}
 		}
@@ -63,7 +63,7 @@ func main() {
 				return
 			}
 			cityName := os.Args[2]
-			adcode, ok := InQuireForecase(cityName)
+			adcode, ok := getCityCode(cityName)
 			if adcode == nil {
 				return
 			}
@@ -106,7 +106,6 @@ func main() {
 			return
 		}
 	}
-
 }
 
 func checkDir() {
@@ -121,15 +120,7 @@ func printHelp() {
 	fmt.Println("hello,world")
 }
 
-func forecastDay(adcode, date string) {
-
-}
-
-func forecastNum(adcode, date string) {
-
-}
-
-func InQuireForecase(cityName string) (map[string]string, bool) {
+func getCityCode(cityName string) (map[string]string, bool) {
 	rlt, err := doWeatherNow("https://restapi.amap.com/v3/geocode/geo?key=" + key + "&address=" + cityName)
 	if err != nil {
 		fmt.Println("net req error")
@@ -153,12 +144,51 @@ func InQuireForecase(cityName string) (map[string]string, bool) {
 	}
 }
 
-func InQuire(adcode string) {
-	rlt, err := doWeatherNow("https://restapi.amap.com/v3/weather/weatherInfo?key=" + key + "&city=" + adcode)
-	if err != nil {
-		fmt.Println("net req error")
+func getWeatherFea(adcode string) (string, bool) {
+	wea, ok := InQuire(adcode, false)
+	if !ok {
+		return "net req error", false
 	} else {
-		fmt.Println(rlt)
+		var ret WeatherInfoFea
+		err := json.Unmarshal([]byte(wea), &ret)
+		if err != nil {
+			return "格式错误", false
+		}
+		str, _ := json.MarshalIndent(ret, "\t", "    ")
+		fmt.Println(string(str))
+		return "执行成功", true
+	}
+}
+
+func getWeatherNow(adcode string) (string, bool) {
+	wea, ok := InQuire(adcode, true)
+	if !ok {
+		return "net req error", false
+	} else {
+		var ret WeatherInfoNow
+		err := json.Unmarshal([]byte(wea), &ret)
+		if err != nil {
+			return "格式错误", false
+		}
+		str, _ := json.MarshalIndent(ret, "\t", "    ")
+		fmt.Println(string(str))
+		return "执行成功", true
+	}
+}
+
+func InQuire(adcode string, isNow bool) (string, bool) {
+	var extensions string
+	if isNow {
+		extensions = "base"
+	} else {
+		extensions = "all"
+	}
+	rlt, err := doWeatherNow("https://restapi.amap.com/v3/weather/weatherInfo?key=" + key + "&city=" + adcode + "&extensions=" + extensions)
+	if err != nil {
+		return "", false
+	} else {
+		return rlt, true
+		//fmt.Println(rlt)
 	}
 }
 

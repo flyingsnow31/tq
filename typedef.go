@@ -29,7 +29,7 @@ type GeoCode struct {
 	} `json:"geocodes"`
 }
 
-type WeatherInfo struct {
+type WeatherInfoNow struct {
 	Status   string `json:"status"`
 	Count    string `json:"count"`
 	Info     string `json:"info"`
@@ -45,4 +45,29 @@ type WeatherInfo struct {
 		Humidity      string `json:"humidity"`
 		Reporttime    string `json:"reporttime"`
 	} `json:"lives"`
+}
+
+type WeatherInfoFea struct {
+	Status    string `json:"status"`
+	Count     string `json:"count"`
+	Info      string `json:"info"`
+	Infocode  string `json:"infocode"`
+	Forecasts []struct {
+		City       string `json:"city"`
+		Adcode     string `json:"adcode"`
+		Province   string `json:"province"`
+		Reporttime string `json:"reporttime"`
+		Casts      []struct {
+			Date         string `json:"date"`
+			Week         string `json:"week"`
+			Dayweather   string `json:"dayweather"`
+			Nightweather string `json:"nightweather"`
+			Daytemp      string `json:"daytemp"`
+			Nighttemp    string `json:"nighttemp"`
+			Daywind      string `json:"daywind"`
+			Nightwind    string `json:"nightwind"`
+			Daypower     string `json:"daypower"`
+			Nightpower   string `json:"nightpower"`
+		} `json:"casts"`
+	} `json:"forecasts"`
 }
