@@ -18,8 +18,7 @@ func main() {
 		fmt.Println("目录寻找失败")
 		return
 	}
-	checkDir(home)
-	dir := home + "/AppData/Local/tq/data/city.dat"
+	dir := conf(home)
 	fmt.Println(dir)
 	fil, err := os.OpenFile(dir, os.O_CREATE|os.O_RDONLY, 0777)
 	if err != nil {
@@ -77,7 +76,7 @@ func main() {
 				return
 			}
 			if ok {
-				fil, _ := os.OpenFile(home+"/AppData/Local/tq/data/city.dat", os.O_TRUNC|os.O_RDWR, 0777)
+				fil, _ := os.OpenFile(dir, os.O_TRUNC|os.O_RDWR, 0777)
 				defer func() {
 					_ = fil.Close()
 				}()
@@ -117,15 +116,6 @@ func main() {
 			fmt.Println("para error, use 'tq h'")
 			return
 		}
-	}
-}
-
-func checkDir(home string) {
-	dir := home + "/AppData/Local/tq/data"
-	//fmt.Println(dir)
-	_, err := os.Stat(dir)
-	if os.IsNotExist(err) {
-		_ = os.MkdirAll(dir, os.ModePerm)
 	}
 }
 
