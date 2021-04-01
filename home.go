@@ -66,7 +66,7 @@ func conf(home string) string {
 	if "windows" == runtime.GOOS {
 		home = home + "/AppData/Local/tq/data"
 	} else {
-		home = home + "/.bash_profile/tq/data"
+		home = home + "/.tq/tq/data"
 	}
 	_, err := os.Stat(home)
 	if os.IsNotExist(err) {
