@@ -6,12 +6,17 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"flag"
 )
 
 const key = "f80464c47d16849da62561a10151d1b7"
 
+var a = flag.bool("a",false,"查看设定城市未来三天天气")
+var s = flag.string("s","","查询城市名并进行绑定")
+var h = flag.bool("h",false,"查看帮助菜单")
+
 func main() {
-	argNum := len(os.Args)
+	flag.Parse()
 	//dirwd,_:=os.Getwd()
 	home, err := Home()
 	if err != nil {
@@ -27,6 +32,14 @@ func main() {
 	}
 	buf, err := ioutil.ReadAll(fil)
 	_ = fil.Close()
+	if a {
+
+	}
+	if h {
+	}
+	if len(s) {
+	}
+
 	switch argNum {
 	case 1:
 		{
