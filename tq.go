@@ -57,10 +57,7 @@ func main() {
 					return
 				}
 			} else { //未来三天
-				if len(string(buf)) == 0 {
-					fmt.Println("please use 'tq set <cityname>' to init.")
-					return
-				}
+				fmt.Println("参数错误，使用 h 参数查看使用说明")
 			}
 		}
 	case 3:
@@ -119,8 +116,11 @@ func main() {
 	}
 }
 
-func printHelp() {
-	fmt.Println("hello,world")
+func printHelp(){
+	fmt.Println("tq 查看所设定的城市天气")
+	fmt.Println("tq set <cityname> 绑定城市")
+	fmt.Println("tq h 查看帮助")
+	fmt.Println("tq a 查看未来三天q天气")
 }
 
 func getCityCode(cityName string) (map[string]string, bool) {
