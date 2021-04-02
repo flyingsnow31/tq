@@ -2,18 +2,18 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
-	"flag"
 )
 
 const key = "f80464c47d16849da62561a10151d1b7"
 
-var a = flag.bool("a",false,"查看设定城市未来三天天气")
-var s = flag.string("s","","查询城市名并进行绑定")
-var h = flag.bool("h",false,"查看帮助菜单")
+var a = flag.Bool("a", false, "查看设定城市未来三天天气")
+var s = flag.String("s", "", "查询城市名并进行绑定")
+var h = flag.Bool("h", false, "查看帮助菜单")
 
 func main() {
 	flag.Parse()
@@ -25,115 +25,96 @@ func main() {
 	}
 	dir := conf(home)
 	fmt.Println(dir)
-	fil, err := os.OpenFile(dir, os.O_CREATE|os.O_RDONLY, 0777)
-	if err != nil {
-		fmt.Println(err.Error())
+	buf, ok := getBuf(dir)
+	if !ok {
 		return
 	}
-	buf, err := ioutil.ReadAll(fil)
-	_ = fil.Close()
-	if a {
-
-	}
-	if h {
-	}
-	if len(s) {
-	}
-
-	switch argNum {
-	case 1:
-		{
-			if len(string(buf)) == 0 {
-				fmt.Println("please use 'tq set <cityname>' to init.")
-				return
-			}
-			msg, ok := getWeatherNow(string(buf))
-			if !ok {
-				fmt.Println(msg)
-				return
-			}
+	isBufExist := checkBuf(buf)
+	if len(os.Args) == 1 {
+		if !isBufExist {
+			return
 		}
-	case 2:
-		{
-			date := os.Args[1]
-			if date == "h" { //帮助信息
-				printHelp()
-				return
-			} else if date == "a" { //未来第1、2、3天的天气
-				if len(string(buf)) == 0 {
-					fmt.Println("please use 'tq set <cityname>' to init.")
-					return
-				}
-				msg, ok := getWeatherFea(string(buf))
-				if !ok {
-					fmt.Println(msg)
-					return
-				}
-			} else { //未来三天
-				fmt.Println("参数错误，使用 h 参数查看使用说明")
-			}
+		msg, ok := getWeatherNow(string(buf))
+		if !ok {
+			fmt.Println(msg)
 		}
-	case 3:
-		{
-			para := os.Args[1]
-			if para != "set" {
-				fmt.Println("para error, use 'tq h'")
-				return
-			}
-			cityName := os.Args[2]
-			adcode, ok := getCityCode(cityName)
-			if adcode == nil {
-				return
-			}
-			if ok {
-				fil, _ := os.OpenFile(dir, os.O_TRUNC|os.O_RDWR, 0777)
-				defer func() {
-					_ = fil.Close()
-				}()
-				cityNum := len(adcode)
-				if cityNum == 1 {
-					for code := range adcode {
-						_, _ = fil.WriteString(code)
-					}
-					return
-				} else {
-					fmt.Println("出现重名，请选择:")
-					tmp := make([]string, cityNum)
-					index := 0
-					for code, name := range adcode {
-						tmp = append(tmp, code)
-						fmt.Printf("%d %s", index, name)
-						index++
-					}
-					for {
-						_, _ = fmt.Scanf("%d", index)
-						if index > cityNum-1 || index < 0 {
-							fmt.Println("输入错误，请重试")
-						} else {
-							_, _ = fil.WriteString(tmp[index])
-							break
-						}
-					}
-					return
+		return
+	}
+	if *a == true {
+		if !isBufExist {
+			return
+		}
+		msg, ok := getWeatherFea(string(buf))
+		if !ok {
+			fmt.Println(msg)
+			return
+		}
+	}
+	if *h == true {
+		printHelp()
+		return
+	}
+	if len(*s) > 0 {
+		cityName := os.Args[2]
+		adcode, ok := getCityCode(cityName)
+		if adcode == nil {
+			return
+		}
+		if ok {
+			fil, _ := os.OpenFile(dir, os.O_TRUNC|os.O_RDWR, 0777)
+			defer func() {
+				_ = fil.Close()
+			}()
+			cityNum := len(adcode)
+			if cityNum == 1 {
+				for code := range adcode {
+					_, _ = fil.WriteString(code)
 				}
+				return
 			} else {
-				fmt.Println(adcode["msg"])
+				fmt.Println("出现重名，请选择:")
+				tmp := make([]string, cityNum)
+				index := 0
+				for code, name := range adcode {
+					tmp = append(tmp, code)
+					fmt.Printf("%d %s", index, name)
+					index++
+				}
+				for {
+					_, _ = fmt.Scanf("%d", index)
+					if index > cityNum-1 || index < 0 {
+						fmt.Println("输入错误，请重试")
+					} else {
+						_, _ = fil.WriteString(tmp[index])
+						break
+					}
+				}
 				return
 			}
-		}
-	default:
-		{
-			fmt.Println("para error, use 'tq h'")
+		} else {
+			fmt.Println(adcode["msg"])
 			return
 		}
 	}
 }
 
-func printHelp(){
-	fmt.Println("tq 查看所设定的城市天气")
-	fmt.Println("tq set <cityname> 绑定城市")
-	fmt.Println("tq h 查看帮助")
-	fmt.Println("tq a 查看未来三天q天气")
+func getBuf(dir string) (string, bool) {
+	fil, err := os.OpenFile(dir, os.O_CREATE|os.O_RDONLY, 0777)
+	if err != nil {
+		fmt.Println(err.Error())
+		return "", false
+	}
+	buf, err := ioutil.ReadAll(fil)
+	_ = fil.Close()
+	return string(buf), true
+}
+
+func checkBuf(buf string) bool {
+	if len(buf) == 0 {
+		fmt.Println("please use 'tq set <cityname>' to init.")
+		return false
+	}
+	return true
 }
 
 func getCityCode(cityName string) (map[string]string, bool) {
@@ -231,4 +212,14 @@ func doWeatherNow(url string) (rlt string, err error) {
 			return string(body), err
 		}
 	}
+}
+
+func printHelp() {
+	fmt.Println("tq 查看所设定的城市天气\n" +
+		"------------------------\n" +
+		"-a 查看未来三天天气\n" +
+		"-h 查看帮助\n" +
+		"-s 设定城市\n" +
+		"------------------------\n" +
+		"                 by lzy")
 }
