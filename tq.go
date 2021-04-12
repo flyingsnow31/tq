@@ -24,7 +24,7 @@ func main() {
 		return
 	}
 	dir := conf(home)
-	fmt.Println(dir)
+	//fmt.Println(dir)
 	buf, ok := getBuf(dir)
 	if !ok {
 		return
@@ -34,7 +34,7 @@ func main() {
 		if !isBufExist {
 			return
 		}
-		msg, ok := getWeatherNow(string(buf))
+		msg, ok := getWeatherNow(buf)
 		if !ok {
 			fmt.Println(msg)
 		}
@@ -44,7 +44,7 @@ func main() {
 		if !isBufExist {
 			return
 		}
-		msg, ok := getWeatherFea(string(buf))
+		msg, ok := getWeatherFea(buf)
 		if !ok {
 			fmt.Println(msg)
 			return
@@ -67,8 +67,9 @@ func main() {
 			}()
 			cityNum := len(adcode)
 			if cityNum == 1 {
-				for code := range adcode {
+				for code, name := range adcode {
 					_, _ = fil.WriteString(code)
+					fmt.Println(name, "设置成功")
 				}
 				return
 			} else {
@@ -86,6 +87,7 @@ func main() {
 						fmt.Println("输入错误，请重试")
 					} else {
 						_, _ = fil.WriteString(tmp[index])
+						fmt.Println(adcode[tmp[index]], "设置成功")
 						break
 					}
 				}
@@ -120,10 +122,12 @@ func checkBuf(buf string) bool {
 func getCityCode(cityName string) (map[string]string, bool) {
 	rlt, err := doWeatherNow("https://restapi.amap.com/v3/geocode/geo?key=" + key + "&address=" + cityName)
 	if err != nil {
-		fmt.Println("net req error")
-		return nil, false
+		ret := map[string]string{
+			"msg": "net req error",
+		}
+		return ret, false
 	} else {
-		fmt.Println(rlt)
+		//fmt.Println(rlt)
 		var geoCode GeoCode
 		_ = json.Unmarshal([]byte(rlt), &geoCode)
 		if geoCode.Count == "0" {
@@ -151,7 +155,7 @@ func getWeatherFea(adcode string) (string, bool) {
 		if err != nil {
 			return "格式错误", false
 		}
-		str, _ := json.MarshalIndent(ret, "\t", "    ")
+		str, _ := json.MarshalIndent(ret.Forecasts, "", "    ")
 		fmt.Println(string(str))
 		return "执行成功", true
 	}
@@ -167,7 +171,7 @@ func getWeatherNow(adcode string) (string, bool) {
 		if err != nil {
 			return "格式错误", false
 		}
-		str, _ := json.MarshalIndent(ret, "\t", "    ")
+		str, _ := json.MarshalIndent(ret.Lives, "", "    ")
 		fmt.Println(string(str))
 		return "执行成功", true
 	}
