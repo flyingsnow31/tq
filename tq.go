@@ -14,6 +14,7 @@ const key = "f80464c47d16849da62561a10151d1b7"
 var a = flag.Bool("a", false, "查看设定城市未来三天天气")
 var s = flag.String("s", "", "查询城市名并进行绑定")
 var h = flag.Bool("h", false, "查看帮助菜单")
+var t = flag.String("t", "", "查询城市名并进行绑定")
 
 func main() {
 	flag.Parse()
@@ -88,6 +89,50 @@ func main() {
 					} else {
 						_, _ = fil.WriteString(tmp[index])
 						fmt.Println(adcode[tmp[index]], "设置成功")
+						break
+					}
+				}
+				return
+			}
+		} else {
+			fmt.Println(adcode["msg"])
+			return
+		}
+	}
+	if len(*t) > 0 {
+		cityName := os.Args[2]
+		adcode, ok := getCityCode(cityName)
+		if adcode == nil {
+			return
+		}
+		if ok {
+			cityNum := len(adcode)
+			if cityNum == 1 {
+				for code := range adcode {
+					msg, ok := getWeatherNow(code)
+					if !ok {
+						fmt.Println(msg)
+					}
+				}
+				return
+			} else {
+				fmt.Println("出现重名，请选择:")
+				tmp := make([]string, cityNum)
+				index := 0
+				for code, name := range adcode {
+					tmp = append(tmp, code)
+					fmt.Printf("%d %s", index, name)
+					index++
+				}
+				for {
+					_, _ = fmt.Scanf("%d", index)
+					if index > cityNum-1 || index < 0 {
+						fmt.Println("输入错误，请重试")
+					} else {
+						msg, ok := getWeatherNow(tmp[index])
+						if !ok {
+							fmt.Println(msg)
+						}
 						break
 					}
 				}
